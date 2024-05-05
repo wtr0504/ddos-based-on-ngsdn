@@ -62,7 +62,7 @@ import static org.onosproject.ngsdn.tutorial.AppConstants.INITIAL_SETUP_DELAY;
         immediate = true,
         // *** TODO EXERCISE 5
         // Enable component (enabled = true)
-        enabled = false
+        enabled = true
 )
 public class NdpReplyComponent {
 
@@ -162,6 +162,7 @@ public class NdpReplyComponent {
                 .stream()
                 .filter(iface -> iface.connectPoint().deviceId().equals(deviceId))
                 .collect(Collectors.toSet());
+        System.out.println("deviceID:"+deviceId+" deviceMAC: "+deviceMac);
 
         if (interfaces.isEmpty()) {
             log.info("{} does not have any IPv6 interface configured",
@@ -172,12 +173,13 @@ public class NdpReplyComponent {
         // Generate and install flow rules.
         log.info("Adding rules to {} to generate NDP NA for {} IPv6 interfaces...",
                  deviceId, interfaces.size());
+        System.out.println("device:" +deviceId + " interface: " +interfaces.toString());
         final Collection<FlowRule> flowRules = interfaces.stream()
                 .map(this::getIp6Addresses)
                 .flatMap(Collection::stream)
                 .map(ipv6addr -> buildNdpReplyFlowRule(deviceId, ipv6addr, deviceMac))
                 .collect(Collectors.toSet());
-
+        System.out.println("device:" + deviceId +"flows:" + flowRules.size());
         installRules(flowRules);
     }
 
@@ -206,11 +208,11 @@ public class NdpReplyComponent {
         final PiActionParam targetMacParam = new PiActionParam(
                 PiActionParamId.of("target_mac"), targetMac.toBytes());
         final PiAction action = PiAction.builder()
-                .withId(PiActionId.of("MODIFY ME"))
+                .withId(PiActionId.of("IngressPipeImpl.ndp_ns_to_na"))
                 .withParameter(targetMacParam)
                 .build();
         // Table ID.
-        final String tableId = "MODIFY ME";
+        final String tableId = "IngressPipeImpl.ndp_table";
         // ---- END SOLUTION ----
 
         // Build flow rule.

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.onlab.packet.DeserializationException;
 import org.onlab.packet.Ethernet;
+import org.onlab.packet.LLDP;
 import org.onlab.util.ImmutableByteSequence;
 import org.onosproject.net.ConnectPoint;
 import org.onosproject.net.DeviceId;
@@ -127,6 +128,7 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
                 builder.add(buildPacketOut(packet.data(), outInst.port().toLong()));
             }
         }
+//        System.out.println(((LLDP)packet).toString());
         return builder.build();
     }
 
@@ -151,10 +153,11 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
                     "Port number %d too big, %s", portNumber, e.getMessage()));
         }
 
+
         // Create metadata instance for egress port.
         // *** TODO EXERCISE 4: modify metadata names to match P4 program
         // ---- START SOLUTION ----
-        final String outPortMetadataName = "ADD HERE METADATA NAME FOR THE EGRESS PORT";
+        final String outPortMetadataName = "egress_port";
         // ---- END SOLUTION ----
         final PiPacketMetadata outPortMetadata = PiPacketMetadata.builder()
                 .withId(PiPacketMetadataId.of(outPortMetadataName))
@@ -186,7 +189,7 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
         // Find the ingress_port metadata.
         // *** TODO EXERCISE 4: modify metadata names to match P4Info
         // ---- START SOLUTION ----
-        final String inportMetadataName = "ADD HERE METADATA NAME FOR THE INGRESS PORT";
+        final String inportMetadataName = "ingress_port";
         // ---- END SOLUTION ----
         Optional<PiPacketMetadata> inportMetadata = packetIn.metadatas()
                 .stream()
@@ -204,6 +207,7 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
         // 1. Parse packet-in object into Ethernet packet instance.
         final byte[] payloadBytes = packetIn.data().asArray();
         final ByteBuffer rawData = ByteBuffer.wrap(payloadBytes);
+//        System.out.println(ByteBuffer.wrap(payloadBytes).asCharBuffer());
         final Ethernet ethPkt;
         try {
             ethPkt = Ethernet.deserializer().deserialize(
@@ -211,6 +215,12 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
         } catch (DeserializationException dex) {
             throw new PiInterpreterException(dex.getMessage());
         }
+//        System.out.println("src mac:"+ethPkt.getSourceMAC().toString());
+//
+//        System.out.println(((LLDP)ethPkt.getPayload()).toString());
+//        ethPkt.setSourceMACAddress("4C:1D:96:90:CC:E3");
+//        System.out.println("inport Metadata:kv:");
+//        System.out.println("inport Metadata:"+inportMetadata.get().value().toString());
 
         // 2. Get ingress port
         final ImmutableByteSequence portBytes = inportMetadata.get().value();
@@ -250,3 +260,4 @@ public class InterpreterImpl extends AbstractHandlerBehaviour
         return Optional.empty();
     }
 }
+

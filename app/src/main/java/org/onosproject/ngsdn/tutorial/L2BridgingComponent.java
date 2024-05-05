@@ -64,7 +64,7 @@ import static org.onosproject.ngsdn.tutorial.AppConstants.INITIAL_SETUP_DELAY;
         immediate = true,
         // *** TODO EXERCISE 4
         // Enable component (enabled = true)
-        enabled = false
+        enabled = true
 )
 public class L2BridgingComponent {
 
@@ -250,7 +250,7 @@ public class L2BridgingComponent {
 
     /**
      * Insert flow rule that matches all unmatched ethernet traffic. This
-     * will implement the traditional briding behavior that floods all
+     * will implement the traditional bridging behavior that floods all
      * unmatched traffic.
      * <p>
      * This method will be called at component activation for each device
@@ -379,7 +379,6 @@ public class L2BridgingComponent {
                 // MainComponent.
                 mainComponent.getExecutorService().execute(() -> {
                     log.info("{} event! deviceId={}", event.type(), deviceId);
-
                     setUpDevice(deviceId);
                 });
             }
