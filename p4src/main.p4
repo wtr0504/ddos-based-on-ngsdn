@@ -627,6 +627,17 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
         @name("acl_table_counter")
         counters = direct_counter(CounterType.packets_and_bytes);
     }
+    
+    table ddos_drop_table {
+        key = {
+            hdr.ipv6.src_addr : lpm;
+        }
+        actions = {
+            NoAction;
+        }
+        @name("ddos_drop_couter")
+        counters = direct_counter(CounterType.packets_and_bytes);
+    }
 
     apply {
 
@@ -640,10 +651,10 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             standard_metadata.egress_spec = hdr.cpu_out.egress_port;
             hdr.cpu_out.setInvalid();
             exit;
-	}
+	    }
 
         bool do_l3_l2 = true;
-
+        // bool dropped = false;
         if (hdr.icmpv6.isValid() && hdr.icmpv6.type == ICMP6_TYPE_NS) {
             // *** TODO EXERCISE 5
             // Insert logic to handle NDP messages to resolve the MAC address of the
@@ -662,7 +673,12 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             // Insert logic to match the My Station table and upon hit, the
             // routing table. You should also add a conditional to drop the
             // packet if the hop_limit reaches 0.
-            if(hdr.ipv6.isValid() && my_station_table.apply().hit){
+            // if(ddos_drop_table.apply().hit){
+            //     mark_to_drop(standard_metadata);
+            //     // dropped = true;
+            //     exit;
+            // }
+            if(hdr.ipv6.isValid() && my_station_table.apply().hit ){
                 if(local_sid_table.apply().hit){
                     if(hdr.srv6h.isValid() && hdr.srv6h.segment_left == 0){
                         srv6_pop();
@@ -671,7 +687,6 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                     srv6_transit.apply();
                 }
                 ipv6_routing_table.apply();
-
                 if(hdr.ipv6.hop_limit == 0){ drop();}
             }
 
@@ -685,7 +700,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
 
 
             // L2 bridging logic. Apply the exact table first...
-            if (!l2_exact_table.apply().hit) {
+            if (  !l2_exact_table.apply().hit) {
                 // ...if an entry is NOT found, apply the ternary one in case
                 // this is a multicast/broadcast NDP NS packet.
                 l2_ternary_table.apply();
@@ -694,6 +709,11 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
 
         // Lastly, apply the ACL table.
         acl_table.apply();
+        if(ddos_drop_table.apply().hit){
+            mark_to_drop(standard_metadata);
+            // dropped = true;
+            exit;
+        }
     }
 }
 

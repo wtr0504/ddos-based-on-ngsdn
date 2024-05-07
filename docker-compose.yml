@@ -28,6 +28,7 @@ services:
     ports:
       - "8181:8181" # HTTP
       - "8101:8101" # SSH (CLI)
+      - "6633:6633" # controller
     volumes:
       - ./tmp/onos:/root/onos/apache-karaf-4.2.8/data/tmp
     environment:

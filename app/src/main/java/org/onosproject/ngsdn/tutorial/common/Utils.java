@@ -17,6 +17,7 @@
 package org.onosproject.ngsdn.tutorial.common;
 
 import org.onosproject.core.ApplicationId;
+import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.PortNumber;
 import org.onosproject.net.flow.DefaultFlowRule;
@@ -136,6 +137,24 @@ public final class Utils {
                 groupId,
                 appId);
     }
+
+public static GroupDescription buildDDosDropGroup(DeviceId deviceId,
+                                                  String tableId,
+                                                  int groupId,
+                                                  Collection<PiAction> actions,
+                                                  ApplicationId appId){
+        
+        final GroupKey groupKey = new DefaultGroupKey(
+                ByteBuffer.allocate(4).putInt(groupId).array());
+        final List<GroupBucket> buckets = actions.stream()
+                .map(action -> DefaultTrafficTreatment.builder()
+                        .piTableAction(action).build())
+                .map(DefaultGroupBucket::createAllGroupBucket)
+                .collect(Collectors.toList());
+        return new DefaultGroupDescription(deviceId, GroupDescription.Type.ALL,
+                                new GroupBuckets(buckets), groupKey, groupId, appId);
+        }
+
 
     public static void sleep(int millis) {
         try {

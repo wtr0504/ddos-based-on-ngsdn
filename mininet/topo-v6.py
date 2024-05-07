@@ -22,6 +22,7 @@ from mininet.net import Mininet
 from mininet.node import Host
 from mininet.topo import Topo
 from stratum import StratumBmv2Switch
+from mininet.node import RemoteController
 
 CPU_PORT = 255
 
@@ -98,9 +99,11 @@ class TutorialTopo(Topo):
         self.addLink(h3, leaf2)  # port 3
         self.addLink(h4, leaf2)  # port 4
 
-
+controller_ip = 'localhost'
+controller_port = 6633
 def main():
-    net = Mininet(topo=TutorialTopo(), controller=None)
+    net = Mininet(topo=TutorialTopo(), controller=RemoteController)
+    net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
     net.start()
     CLI(net)
     net.stop()
