@@ -2,7 +2,8 @@ version: "3"
 
 services:
   mininet:
-    image: opennetworking/ngsdn-tutorial:stratum_bmv2
+    image: tdockglimmer/mininet:newnew
+    # image: opennetworking/ngsdn-tutorial:stratum_bmv2
     hostname: mininet
     container_name: mininet
     privileged: true
@@ -10,17 +11,23 @@ services:
     stdin_open: true
     restart: always
     volumes:
-      - ./tmp:/tmp
-      - ./mininet:/mininet
+      - ./tmp:/root/tmp
+      - ./mininet:/root/mininet
+      # - /tmp/.X11-unix:/tmp/.X11-unix 
+      # - /lib/modules:/lib/modules 
     ports:
       - "50001:50001"
       - "50002:50002"
       - "50003:50003"
       - "50004:50004"
+      - "50005:50005"
+      - "50006:50006"
+      - "50007:50007"
+      - "50008:50008"
     # NGSDN_TOPO_PY is a Python-based Mininet script defining the topology. Its
     # value is passed to docker-compose as an environment variable, defined in
     # the Makefile.
-    entrypoint: "/mininet/${NGSDN_TOPO_PY}"
+    entrypoint: "/root/mininet/${NGSDN_TOPO_PY}"
   onos:
     image: onosproject/onos:2.2.2
     hostname: onos
@@ -28,7 +35,7 @@ services:
     ports:
       - "8181:8181" # HTTP
       - "8101:8101" # SSH (CLI)
-      - "6633:6633" # controller
+      # - "6633:6633" # controller
     volumes:
       - ./tmp/onos:/root/onos/apache-karaf-4.2.8/data/tmp
     environment:

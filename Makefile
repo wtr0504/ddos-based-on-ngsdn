@@ -48,14 +48,15 @@ start-gtp: _start
 
 stop:
 	$(info *** Stopping ONOS and Mininet...)
-	@NGSDN_TOPO_PY=foo docker-compose down -t0
+	@NGSDN_TOPO_PY=foo docker-compose stop -t0
 
 restart: reset start
 
 onos-cli:
 	$(info *** Connecting to the ONOS CLI... password: rocks)
 	$(info *** Top exit press Ctrl-D)
-	@ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o LogLevel=ERROR -p 8101 onos@localhost
+	#-o "StrictHostKeyCheckstoping=no"
+	@ssh -o "UserKnownHostsFile=/dev/null"  -o LogLevel=ERROR -p 8101 onos@localhost
 
 onos-log:
 	docker-compose logs -f onos
@@ -70,6 +71,19 @@ mn-cli:
 
 mn-log:
 	docker logs -f mininet
+	
+stop_mininet:
+
+	docker-compose exec mininet mn -c
+
+start_mininet:
+	docker-compose exec mininet /mininet/${NGSDN_TOPO_PY}
+
+enter-mn:
+	docker exec -it mininet /bin/bash
+
+enter-onos:
+	docker exec -it onos /bin/bash
 
 _netcfg:
 	$(info *** Pushing ${NGSDN_NETCFG_JSON} to ONOS...)

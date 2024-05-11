@@ -102,18 +102,19 @@ class TutorialTopo(Topo):
 controller_ip = 'localhost'
 controller_port = 6633
 def main():
-    net = Mininet(topo=TutorialTopo(), controller=RemoteController)
-    net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
+    net = Mininet(topo=TutorialTopo(), controller=None)
+    # net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
+    # net.addNAT(ip="172.18.0.2/16")
     net.start()
     CLI(net)
     net.stop()
-    print '#' * 80
-    print 'ATTENTION: Mininet was stopped! Perhaps accidentally?'
-    print 'No worries, it will restart automatically in a few seconds...'
-    print 'To access again the Mininet CLI, use `make mn-cli`'
-    print 'To detach from the CLI (without stopping), press Ctrl-D'
-    print 'To permanently quit Mininet, use `make stop`'
-    print '#' * 80
+    # print '#' * 80
+    # print 'ATTENTION: Mininet was stopped! Perhaps accidentally?'
+    # print 'No worries, it will restart automatically in a few seconds...'
+    # print 'To access again the Mininet CLI, use `make mn-cli`'
+    # print 'To detach from the CLI (without stopping), press Ctrl-D'
+    # print 'To permanently quit Mininet, use `make stop`'
+    # print '#' * 80
 
 
 if __name__ == "__main__":
