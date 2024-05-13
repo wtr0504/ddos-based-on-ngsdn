@@ -139,6 +139,7 @@ class TutorialTopo(Topo):
 
 def main():
     net = Mininet(topo=TutorialTopo(), controller=None)
+    # net.addNAT().configDefault()
     net.start()
     CLI(net)
     net.stop()

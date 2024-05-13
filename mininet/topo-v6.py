@@ -34,19 +34,27 @@ class IPv6Host(Host):
     def config(self, ipv6, ipv6_gw=None, **params):
         super(IPv6Host, self).config(**params)
         self.cmd('ip -4 addr flush dev %s' % self.defaultIntf())
+        # self.cmd('ip -4 addr add %s dev %s' % (ipv4,self.defaultIntf()))
+        
+        # def updateIPv4():
+        #     return ipv4.split('/')[0]
+        # self.defaultIntf().updateIP = updateIPv4
+        
         self.cmd('ip -6 addr flush dev %s' % self.defaultIntf())
         self.cmd('ip -6 addr add %s dev %s' % (ipv6, self.defaultIntf()))
         if ipv6_gw:
             self.cmd('ip -6 route add default via %s' % ipv6_gw)
+        # if ip_gw:
+        #     self.cmd('ip -4 route add default via %s' % ip_gw)
         # Disable offload
         for attr in ["rx", "tx", "sg"]:
             cmd = "/sbin/ethtool --offload %s %s off" % (self.defaultIntf(), attr)
             self.cmd(cmd)
 
-        def updateIP():
+        def updateIPv6():
             return ipv6.split('/')[0]
 
-        self.defaultIntf().updateIP = updateIP
+        self.defaultIntf().updateIP = updateIPv6
 
     def terminate(self):
         super(IPv6Host, self).terminate()
@@ -70,6 +78,7 @@ class TutorialTopo(Topo):
         # gRPC port 50004
         spine2 = self.addSwitch('spine2', cls=StratumBmv2Switch, cpuport=CPU_PORT)
 
+        # nat1 = self.addNode( 'nat1', cls=NAT, ip=natIP,inNamespace=False )
         # Switch Links
         self.addLink(spine1, leaf1)
         self.addLink(spine1, leaf2)
@@ -78,12 +87,16 @@ class TutorialTopo(Topo):
 
         # IPv6 hosts attached to leaf 1
         h1a = self.addHost('h1a', cls=IPv6Host, mac="00:00:00:00:00:1A",
+                        #    ip = "10.0.1.1/24",ip_gw = "10.0.1.254",
                            ipv6='2001:1:1::a/64', ipv6_gw='2001:1:1::ff')
         h1b = self.addHost('h1b', cls=IPv6Host, mac="00:00:00:00:00:1B",
+                        #    ip = "10.0.1.2/24",ip_gw = "10.0.1.254",
                            ipv6='2001:1:1::b/64', ipv6_gw='2001:1:1::ff')
         h1c = self.addHost('h1c', cls=IPv6Host, mac="00:00:00:00:00:1C",
+                        #    ip = "10.0.1.3/24",ip_gw = "10.0.1.254",
                            ipv6='2001:1:1::c/64', ipv6_gw='2001:1:1::ff')
         h2 = self.addHost('h2', cls=IPv6Host, mac="00:00:00:00:00:20",
+                        #   ip = "10.0.2.1/24",ip_gw = "10.0.2.254",
                           ipv6='2001:1:2::1/64', ipv6_gw='2001:1:2::ff')
         # h2b = self.addHost('h2b',cls=IPv6Host)
         self.addLink(h1a, leaf1)  # port 3
@@ -93,8 +106,10 @@ class TutorialTopo(Topo):
 
         # IPv6 hosts attached to leaf 2
         h3 = self.addHost('h3', cls=IPv6Host, mac="00:00:00:00:00:30",
+                        #   ip = "10.0.3.1/24",ip_gw = "10.0.3.254",
                           ipv6='2001:2:3::1/64', ipv6_gw='2001:2:3::ff')
         h4 = self.addHost('h4', cls=IPv6Host, mac="00:00:00:00:00:40",
+                        #   ip = "10.0.4.1/24",ip_gw = "10.0.4.254",
                           ipv6='2001:2:4::1/64', ipv6_gw='2001:2:4::ff')
         self.addLink(h3, leaf2)  # port 3
         self.addLink(h4, leaf2)  # port 4
@@ -104,7 +119,7 @@ controller_port = 6633
 def main():
     net = Mininet(topo=TutorialTopo(), controller=None)
     # net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
-    # net.addNAT(ip="172.18.0.2/16")
+    # net.addNAT().configDefault()
     net.start()
     CLI(net)
     net.stop()
