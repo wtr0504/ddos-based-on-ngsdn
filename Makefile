@@ -40,6 +40,9 @@ _start:
 start: NGSDN_TOPO_PY := topo-v6.py
 start: _start
 
+start-ddos: NGSDN_TOPO_PY := topo-ddos.py
+start-ddos: _start
+
 start-v4: NGSDN_TOPO_PY := topo-v4.py
 start-v4: _start
 
@@ -90,6 +93,9 @@ _netcfg:
 	${onos_curl} -X POST -H 'Content-Type:application/json' \
 		${onos_url}/v1/network/configuration -d@./mininet/${NGSDN_NETCFG_JSON}
 	@echo
+
+netcfg-ddos: NGSDN_NETCFG_JSON := netcfg_new.json
+netcfg-ddos: _netcfg
 
 netcfg: NGSDN_NETCFG_JSON := netcfg.json
 netcfg: _netcfg

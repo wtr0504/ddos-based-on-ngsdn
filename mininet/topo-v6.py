@@ -121,6 +121,10 @@ def main():
     # net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
     # net.addNAT().configDefault()
     net.start()
+    h2 = net.get('h2')
+    result = h2.cmd('ifconfig')
+    print(h2.cmd('python3 /mininet/host-service/httpSimpleServer.py &'))
+    print(result)
     CLI(net)
     net.stop()
     # print '#' * 80
