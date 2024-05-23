@@ -51,7 +51,7 @@ start-gtp: _start
 
 stop:
 	$(info *** Stopping ONOS and Mininet...)
-	@NGSDN_TOPO_PY=foo docker-compose stop -t0
+	@NGSDN_TOPO_PY=foo docker-compose down -t0
 
 restart: reset start
 

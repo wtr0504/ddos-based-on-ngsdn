@@ -237,8 +237,12 @@ public class Ipv6RoutingComponent {
         // Modify P4Runtime entity names to match content of P4Info file (look
         // for the fully qualified name of tables, match fields, and actions.
         // ---- START SOLUTION ----
+        final MacAddress spine1_Mac = MacAddress.valueOf("00:aa:00:00:00:01");
         final String tableId = "IngressPipeImpl.ipv6_routing_table";
         for (MacAddress nextHopMac : nextHopMacs) {
+            if(nextHopMac.equals(spine1_Mac)){
+                continue;
+            }
             final PiAction action = PiAction.builder()
                     .withId(PiActionId.of("IngressPipeImpl.set_next_ipv6_hop"))
                     .withParameter(new PiActionParam(
