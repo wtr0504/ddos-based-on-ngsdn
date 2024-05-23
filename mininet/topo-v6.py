@@ -123,7 +123,7 @@ def main():
     net.start()
     h2 = net.get('h2')
     result = h2.cmd('ifconfig')
-    print(h2.cmd('python3 /mininet/host-service/httpSimpleServer.py &'))
+    print(h2.cmd('python3 mininet /mininet/host-service/httpSimpleServer.py'))
     print(result)
     CLI(net)
     net.stop()

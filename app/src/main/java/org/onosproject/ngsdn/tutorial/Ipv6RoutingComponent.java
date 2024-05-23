@@ -616,7 +616,7 @@ public class Ipv6RoutingComponent {
         // Get myStationMac address of all spines.
         Set<MacAddress> spineMacs = stream(deviceService.getDevices())
                 .map(Device::id)
-                .filter(this::isSpine)
+                .filter(this::isSpine)// TODO
                 .map(this::getMyStationMac)
                 .collect(Collectors.toSet());
 

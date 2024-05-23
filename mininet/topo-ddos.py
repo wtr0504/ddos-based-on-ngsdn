@@ -75,18 +75,19 @@ class TutorialTopo(Topo):
         # Switch Links
         self.addLink(spine1,spine2) #spine1 port 1 ---- spine2 port 1
         # self.addLink(spine1,leaf1) #spine1 port 2 ---- leaf1 port 1
-        self.addLink(spine2,spine3) # spine2 port 2 ---- spine3 port 1
-        self.addLink(spine2,leaf1) #spine2 port 3 ---- leaf1 port 2
-        self.addLink(spine2,leaf2) # spine2 port 4 ---- leaf2 port 1
+        # self.addLink(spine2,spine3) # spine2 port 2 ---- spine3 port 1
+        self.addLink(spine2,leaf1) #spine2 port 2 ---- leaf1 port 2
+        self.addLink(spine2,leaf2) # spine2 port 3 ---- leaf2 port 1
+        self.addLink(spine3,leaf1) # leaf1 port 2 -- spine3 port 1 
         self.addLink(spine3,leaf2) #spine3 port 2 ---- leaf2 port 2
         # self.addLink(leaf1,) # leaf1 port 3 ---- leaf2 port 3
         # self.addLink(leaf2,leaf3) # leaf2 port 4 ---- leaf3 port 1
-        self.addLink(spine2,leaf3) # spine2 port 5 ---- leaf3 port 1
+        self.addLink(spine2,leaf3) # spine2 port 4 ---- leaf3 port 1
         self.addLink(spine3,leaf3) # spine3 port 3 ---- leaf3 port 2
         self.addLink(spine3,leaf4) # spine3 port 4 ---- leaf4 port 1
+        self.addLink(spine2,leaf4) # spine2 port 5 ---- leaf4 port 2
         # self.addLink(leaf3,leaf4) # leaf3 port 4 ---- leaf4 port 2
-        self.addLink(leaf1,spine3) # leaf1 port 2 -- spine3 port 5 
-
+        
 
         # IPv6 hosts attached to leaf 1
         h1 = self.addHost('h1', cls=IPv6Host, mac="00:00:00:00:00:10",
@@ -115,11 +116,11 @@ class TutorialTopo(Topo):
         h4c = self.addHost('h4c',cls=IPv6Host,mac="00:00:00:00:00:4C",
                           ipv6='2001:1:4::b/64',ipv6_gw='2001:1:4::ff')
         
-        self.addLink(h1,leaf1) # port 4
-        self.addLink(h2,leaf2) # port 5
-        self.addLink(h3a,leaf3) # port 5
-        self.addLink(h3b,leaf3) #port 6
-        self.addLink(h3c,leaf3) # port 7
+        self.addLink(h1,leaf1) # port 3
+        self.addLink(h2,leaf2) # port 3
+        self.addLink(h3a,leaf3) # port 3
+        self.addLink(h3b,leaf3) #port 4
+        self.addLink(h3c,leaf3) # port 5
         self.addLink(h4a,leaf4) # port 3
         self.addLink(h4b,leaf4) # port 4
         self.addLink(h4c,leaf4) # port 5
@@ -132,24 +133,24 @@ def main():
     # net.addController('controller', controller=RemoteController, ip=controller_ip, port=controller_port)
     # net.addNAT().configDefault()
     net.start()
-    h1 = net.get('h1')
-    h1.cmd('ping leaf1')
+    # h1 = net.get('h1')
+    # h1.cmd('ping leaf1')
     
-    h2 = net.get('h2')
-    h2.cmd('ping leaf2')
+    # h2 = net.get('h2')
+    # h2.cmd('ping leaf2')
     
-    h3a = net.get('h3a')
-    h3a.cmd('ping leaf3')
-    h3b = net.get('h3b')
-    h3b.cmd('ping leaf3')
-    h3c = net.get('h3c')
-    h3c.cmd('ping leaf3')
-    h4a = net.get('h4a')
-    h4a.cmd('ping leaf4')
-    h4b = net.get('h4b')
-    h4b.cmd('ping leaf4')
-    h4c = net.get('h4c')
-    h4c.cmd('ping leaf4')
+    # h3a = net.get('h3a')
+    # h3a.cmd('ping leaf3')
+    # h3b = net.get('h3b')
+    # h3b.cmd('ping leaf3')
+    # h3c = net.get('h3c')
+    # h3c.cmd('ping leaf3')
+    # h4a = net.get('h4a')
+    # h4a.cmd('ping leaf4')
+    # h4b = net.get('h4b')
+    # h4b.cmd('ping leaf4')
+    # h4c = net.get('h4c')
+    # h4c.cmd('ping leaf4')
     
     # result = h2.cmd('ifconfig')
     # print(h2.cmd('python3 /mininet/host-service/httpSimpleServer.py &'))
