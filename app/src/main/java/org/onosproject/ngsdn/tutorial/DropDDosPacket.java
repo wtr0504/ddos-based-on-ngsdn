@@ -1,20 +1,19 @@
 package org.onosproject.ngsdn.tutorial;
 
 
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.felix.gogo.jline.Main;
+
 import org.onlab.packet.Ip6Address;
 import org.onlab.packet.Ip6Prefix;
 import org.onlab.packet.IpAddress;
 import org.onlab.packet.IpPrefix;
-import org.onlab.packet.MacAddress;
+
 import org.onlab.util.ItemNotFoundException;
-import org.onosproject.cfg.ComponentConfigService;
+
 import org.onosproject.core.ApplicationId;
 import org.onosproject.mastership.MastershipService;
-import org.onosproject.net.Device;
+
 import org.onosproject.net.DeviceId;
-import org.onosproject.net.Host;
+
 import org.onosproject.net.config.NetworkConfigService;
 import org.onosproject.net.device.DeviceEvent;
 import org.onosproject.net.device.DeviceListener;
@@ -26,16 +25,10 @@ import org.onosproject.net.flow.criteria.PiCriterion;
 import org.onosproject.net.group.GroupDescription;
 import org.onosproject.net.group.GroupService;
 import org.onosproject.net.host.HostService;
-import org.onosproject.net.host.InterfaceIpAddress;
-import org.onosproject.net.intf.Interface;
-import org.onosproject.net.intf.InterfaceService;
+
 import org.onosproject.net.pi.model.PiActionId;
-import org.onosproject.net.pi.model.PiActionParamId;
 import org.onosproject.net.pi.model.PiMatchFieldId;
 import org.onosproject.net.pi.runtime.PiAction;
-import org.onosproject.net.pi.runtime.PiActionParam;
-import org.onosproject.net.pi.runtime.PiActionProfileGroupId;
-import org.onosproject.net.pi.runtime.PiTableAction;
 import org.onosproject.ngsdn.tutorial.common.FabricDeviceConfig;
 import org.onosproject.ngsdn.tutorial.common.Utils;
 import org.osgi.service.component.annotations.Activate;
@@ -49,13 +42,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Flow;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import static com.google.common.collect.Streams.stream;
 import static org.onosproject.ngsdn.tutorial.AppConstants.INITIAL_SETUP_DELAY;
 
 @Component(

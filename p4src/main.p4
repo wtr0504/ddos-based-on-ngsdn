@@ -36,6 +36,13 @@
 // Required for Exercise 7.
 #define SRV6_MAX_HOPS 4
 
+#define SYN_FLAG = 2
+#define SYN_THRESHOLD 20
+#define BLOOM_FILTER_ENTRIES 4096
+#define BLOOM_FILTER_BIT_WIDTH 32
+#define PACKET_THRESHOLD 6
+#define BLOOM_FILTER_ENTRIES2 8192
+
 typedef bit<9>   port_num_t;
 typedef bit<48>  mac_addr_t;
 typedef bit<16>  mcast_group_id_t;
@@ -121,9 +128,17 @@ header tcp_t {
     bit<32>  seq_no;
     bit<32>  ack_no;
     bit<4>   data_offset;
-    bit<3>   res;
-    bit<3>   ecn;
-    bit<6>   ctrl;
+    bit<4>   res;
+    // bit<3>   ecn;//TODO
+    // bit<6>   ctrl;
+    bit<1>  cwr;
+    bit<1>  ece;
+    bit<1>  urg;
+    bit<1>  ack;
+    bit<1>  psh;
+    bit<1>  rst;
+    bit<1>  syn;
+    bit<1>  fin;
     bit<16>  window;
     bit<16>  checksum;
     bit<16>  urgent_ptr;
@@ -202,6 +217,15 @@ struct local_metadata_t {
     ipv6_addr_t next_srv6_sid;
     bit<8>      ip_proto;
     bit<8>      icmp_type;
+
+    bit<32> output_hash_one;
+    bit<32> output_hash_two;
+    bit<32> counter_one;
+    bit<32> counter_two;
+    bit<32> output_hash_three;
+    bit<32> counter_three;
+    bit<32> output_hash_four;
+    bit<32> counter_four;
 }
 
 
@@ -345,12 +369,108 @@ control VerifyChecksumImpl(inout parsed_headers_t hdr,
 control IngressPipeImpl (inout parsed_headers_t    hdr,
                          inout local_metadata_t    local_metadata,
                          inout standard_metadata_t standard_metadata) {
+    register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES) bloom_filter;
+    register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES2) bloom_filter2;
+
+   
+    // bit<1> direction; // 0表示内部向外界建立tcp，1表示外部流量进入
 
     // Drop action shared by many tables.
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
+    // action set_direction(bit<1> dir) {
+    //     direction = dir;
+    // }
+    // 检查内网还是外部网络
+    // table check_ports {
+    //     key = {
+    //         standard_metadata.ingress_port: exact;
+    //         standard_metadata.egress_spec: exact;
+    //     }
+    //     actions = {
+    //         set_direction;
+    //         NoAction;
+    //     }
+    //     size = 1024;
+    //     @name("check_ports_counter")
+    //     counters = direct_counter(CounterType.packets_and_bytes);
+    //     default_action = NoAction();
+    // }
+
+    action first_drop(){
+         hash(local_metadata.output_hash_three, HashAlgorithm.crc16, (bit<16>)0, {hdr.ipv6.src_addr,
+                                                            hdr.ipv6.dst_addr
+                                                            // hdr.tcp.srcPort,
+                                                            // hdr.tcp.dstPort,
+                                                            //hdr.ipv6.next_hdr
+                                                            },
+                                                            (bit<32>)BLOOM_FILTER_ENTRIES);
+
+        hash(local_metadata.output_hash_four, HashAlgorithm.crc32, (bit<16>)0, {hdr.ipv6.src_addr,
+                                                        hdr.ipv6.dst_addr
+                                                        // hdr.tcp.srcPort,
+                                                        // hdr.tcp.dstPort,
+                                                        //hdr.ipv6.next_hdr
+                                                        },
+                                                        (bit<32>)BLOOM_FILTER_ENTRIES);
+
+        bloom_filter2.read(local_metadata.counter_three , local_metadata.output_hash_three * local_metadata.output_hash_four);
+        // bloom_filter2.read(meta.counter_four, meta.output_hash_four);
+
+        if(hdr.tcp.syn == 1){
+            local_metadata.counter_three = local_metadata.counter_three + 1;
+        }
+        // else{
+        //     local_metadata.counter_three = local_metadata.counter_three + 1;
+        // }
+
+        // if(hdr.tcp.ack == 1){
+        //     meta.counter_four = meta.counter_four + 2;
+        // }else{
+        //     meta.counter_four = meta.counter_four + 1;
+        // }
+
+        bloom_filter2.write(local_metadata.output_hash_three * local_metadata.output_hash_four, local_metadata.counter_three);
+        // bloom_filter2.write(meta.output_hash_four, meta.counter_four);
+    }
+
+
+    // bloom_filter
+    action update_bloom_filter(){
+       //Get register position
+       hash(local_metadata.output_hash_one, HashAlgorithm.crc16, (bit<16>)0, {hdr.ipv6.src_addr,
+                                                          hdr.ipv6.dst_addr,
+                                                          // hdr.tcp.srcPort,
+                                                          // hdr.tcp.dstPort,
+                                                          hdr.ipv6.next_hdr
+                                                          },
+                                                          (bit<32>)BLOOM_FILTER_ENTRIES);
+
+       hash(local_metadata.output_hash_two, HashAlgorithm.crc32, (bit<16>)0, {hdr.ipv6.src_addr,
+                                                          hdr.ipv6.dst_addr,
+                                                          // hdr.tcp.srcPort,
+                                                          // hdr.tcp.dstPort,
+                                                          hdr.ipv6.next_hdr},
+                                                          (bit<32>)BLOOM_FILTER_ENTRIES);
+
+        //Read counters
+        bloom_filter.read(local_metadata.counter_one, local_metadata.output_hash_one);
+        bloom_filter.read(local_metadata.counter_two, local_metadata.output_hash_two);
+
+        if(hdr.tcp.syn == 1){
+            local_metadata.counter_one = local_metadata.counter_one + 1;
+        }
+        if(hdr.tcp.ack == 1){
+            local_metadata.counter_two = local_metadata.counter_two + 1;
+        }
+
+        //write counters
+
+        bloom_filter.write(local_metadata.output_hash_one, local_metadata.counter_one);
+        bloom_filter.write(local_metadata.output_hash_two, local_metadata.counter_two);
+    }
 
     // *** L2 BRIDGING
     //
@@ -679,6 +799,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             //     exit;
             // }
             if(hdr.ipv6.isValid() && my_station_table.apply().hit ){
+            
                 if(local_sid_table.apply().hit){
                     if(hdr.srv6h.isValid() && hdr.srv6h.segment_left == 0){
                         srv6_pop();
@@ -687,6 +808,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                     srv6_transit.apply();
                 }
                 ipv6_routing_table.apply();
+                
                 if(hdr.ipv6.hop_limit == 0){ drop();}
             }
 
@@ -705,8 +827,36 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                 // this is a multicast/broadcast NDP NS packet.
                 l2_ternary_table.apply();
             }
+            // if(hdr.tcp.isValid()){
+            //         // direction = 0;//default
+            //         // if (check_ports.apply().hit){
+            //             // if(direction == 1){
+            //                 syn_flood_bloom_filter();
+            //                 if(local_metadata.counter_syn > local_metadata.counter_ack && (local_metadata.counter_syn - local_metadata.counter_ack > PACKET_THRESHOLD)){//当syn超过阈值后
+            //                     mark_to_drop(standard_metadata);
+            //                     exit;
+            //                 }
+            //             // }
+            //         // }
+            // }
+            if (hdr.tcp.isValid()){
+                 //@atomic{
+                    first_drop();
+                    if(local_metadata.counter_three >= SYN_THRESHOLD){
+                        drop();
+                        return;
+                    }
+                    update_bloom_filter();
+                    //only if IPV4 the rule is applied. Therefore other packets will not be forwarded.
+                    if(local_metadata.counter_one > local_metadata.counter_two){
+                        if ( (local_metadata.counter_one - local_metadata.counter_two > PACKET_THRESHOLD)){
+                            drop();
+                            return;
+                        }
+                    }
+                 //}
+            }
         }
-
         // Lastly, apply the ACL table.
         acl_table.apply();
         if(ddos_drop_table.apply().hit){
