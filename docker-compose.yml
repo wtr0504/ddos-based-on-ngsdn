@@ -2,7 +2,7 @@ version: "3"
 
 services:
   mininet:
-    image: tdockglimmer/mininet:5.29
+    image: tdockglimmer/mininet:6.2
     # image: opennetworking/ngsdn-tutorial:stratum_bmv2
     hostname: mininet
     container_name: mininet

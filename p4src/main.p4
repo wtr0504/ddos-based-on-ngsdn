@@ -40,7 +40,7 @@
 #define SYN_THRESHOLD 20
 #define BLOOM_FILTER_ENTRIES 4096
 #define BLOOM_FILTER_BIT_WIDTH 32
-#define PACKET_THRESHOLD 6
+#define PACKET_THRESHOLD 10
 #define BLOOM_FILTER_ENTRIES2 8192
 
 typedef bit<9>   port_num_t;
@@ -399,42 +399,42 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
     //     default_action = NoAction();
     // }
 
-    action first_drop(){
-         hash(local_metadata.output_hash_three, HashAlgorithm.crc16, (bit<16>)0, {hdr.ipv6.src_addr,
-                                                            hdr.ipv6.dst_addr
-                                                            // hdr.tcp.srcPort,
-                                                            // hdr.tcp.dstPort,
-                                                            //hdr.ipv6.next_hdr
-                                                            },
-                                                            (bit<32>)BLOOM_FILTER_ENTRIES);
+    // action first_drop(){
+    //      hash(local_metadata.output_hash_three, HashAlgorithm.crc16, (bit<16>)0, {hdr.ipv6.src_addr,
+    //                                                         hdr.ipv6.dst_addr
+    //                                                         // hdr.tcp.srcPort,
+    //                                                         // hdr.tcp.dstPort,
+    //                                                         //hdr.ipv6.next_hdr
+    //                                                         },
+    //                                                         (bit<32>)BLOOM_FILTER_ENTRIES);
 
-        hash(local_metadata.output_hash_four, HashAlgorithm.crc32, (bit<16>)0, {hdr.ipv6.src_addr,
-                                                        hdr.ipv6.dst_addr
-                                                        // hdr.tcp.srcPort,
-                                                        // hdr.tcp.dstPort,
-                                                        //hdr.ipv6.next_hdr
-                                                        },
-                                                        (bit<32>)BLOOM_FILTER_ENTRIES);
+    //     hash(local_metadata.output_hash_four, HashAlgorithm.crc32, (bit<16>)0, {hdr.ipv6.src_addr,
+    //                                                     hdr.ipv6.dst_addr
+    //                                                     // hdr.tcp.srcPort,
+    //                                                     // hdr.tcp.dstPort,
+    //                                                     //hdr.ipv6.next_hdr
+    //                                                     },
+    //                                                     (bit<32>)BLOOM_FILTER_ENTRIES);
 
-        bloom_filter2.read(local_metadata.counter_three , local_metadata.output_hash_three * local_metadata.output_hash_four);
-        // bloom_filter2.read(meta.counter_four, meta.output_hash_four);
+    //     bloom_filter2.read(local_metadata.counter_three , local_metadata.output_hash_three * local_metadata.output_hash_four);
+    //     // bloom_filter2.read(meta.counter_four, meta.output_hash_four);
 
-        if(hdr.tcp.syn == 1){
-            local_metadata.counter_three = local_metadata.counter_three + 1;
-        }
-        // else{
-        //     local_metadata.counter_three = local_metadata.counter_three + 1;
-        // }
+    //     if(hdr.tcp.syn == 1){
+    //         local_metadata.counter_three = local_metadata.counter_three + 1;
+    //     }
+    //     // else{
+    //     //     local_metadata.counter_three = local_metadata.counter_three + 1;
+    //     // }
 
-        // if(hdr.tcp.ack == 1){
-        //     meta.counter_four = meta.counter_four + 2;
-        // }else{
-        //     meta.counter_four = meta.counter_four + 1;
-        // }
+    //     // if(hdr.tcp.ack == 1){
+    //     //     meta.counter_four = meta.counter_four + 2;
+    //     // }else{
+    //     //     meta.counter_four = meta.counter_four + 1;
+    //     // }
 
-        bloom_filter2.write(local_metadata.output_hash_three * local_metadata.output_hash_four, local_metadata.counter_three);
-        // bloom_filter2.write(meta.output_hash_four, meta.counter_four);
-    }
+    //     bloom_filter2.write(local_metadata.output_hash_three * local_metadata.output_hash_four, local_metadata.counter_three);
+    //     // bloom_filter2.write(meta.output_hash_four, meta.counter_four);
+    // }
 
 
     // bloom_filter
@@ -808,7 +808,24 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                     srv6_transit.apply();
                 }
                 ipv6_routing_table.apply();
-                
+
+                if (hdr.tcp.isValid()){
+                 //@atomic{
+                    // first_drop();
+                    // if(local_metadata.counter_three >= SYN_THRESHOLD){
+                    //     drop();
+                    //     return;
+                    // }
+                    update_bloom_filter();
+                    //only if IPV4 the rule is applied. Therefore other packets will not be forwarded.
+                    if(local_metadata.counter_one > local_metadata.counter_two){
+                        if ( (local_metadata.counter_one - local_metadata.counter_two > PACKET_THRESHOLD)){
+                            drop();
+                            return;
+                        }
+                    }
+                 //}
+            }
                 if(hdr.ipv6.hop_limit == 0){ drop();}
             }
 
@@ -839,23 +856,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             //             // }
             //         // }
             // }
-            if (hdr.tcp.isValid()){
-                 //@atomic{
-                    first_drop();
-                    if(local_metadata.counter_three >= SYN_THRESHOLD){
-                        drop();
-                        return;
-                    }
-                    update_bloom_filter();
-                    //only if IPV4 the rule is applied. Therefore other packets will not be forwarded.
-                    if(local_metadata.counter_one > local_metadata.counter_two){
-                        if ( (local_metadata.counter_one - local_metadata.counter_two > PACKET_THRESHOLD)){
-                            drop();
-                            return;
-                        }
-                    }
-                 //}
-            }
+            
         }
         // Lastly, apply the ACL table.
         acl_table.apply();
