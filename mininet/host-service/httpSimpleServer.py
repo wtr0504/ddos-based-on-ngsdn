@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import socket
+# h3a wget http://[2001:1:2::1]:8080/
 
 class SimpleHTTPServer:
     def __init__(self, host, port):

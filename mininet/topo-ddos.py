@@ -119,7 +119,7 @@ class TutorialTopo(Topo):
         self.addLink(h1,leaf1) # port 3
         self.addLink(h2,leaf2) # port 3
         self.addLink(h3a,leaf3) # port 3
-        self.addLink(h3b,leaf3) #port 4
+        self.addLink(h3b,leaf3) # port 4
         self.addLink(h3c,leaf3) # port 5
         self.addLink(h4a,leaf4) # port 3
         self.addLink(h4b,leaf4) # port 4

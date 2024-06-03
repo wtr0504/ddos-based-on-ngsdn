@@ -42,6 +42,7 @@
 #define BLOOM_FILTER_BIT_WIDTH 32
 #define PACKET_THRESHOLD 10
 #define BLOOM_FILTER_ENTRIES2 8192
+#define TIME_WINDOW 3600000 * 1000
 
 typedef bit<9>   port_num_t;
 typedef bit<48>  mac_addr_t;
@@ -175,6 +176,15 @@ header ndp_t {
     bit<48>      target_mac_addr;
 }
 
+header dns_t {
+    bit<16> transaction_id;
+    bit<16> flags;
+    bit<16> questions;
+    bit<16> answer_rrs;
+    bit<16> authority_rrs;
+    bit<16> additional_rrs;
+}
+
 // Packet-in header. Prepended to packets sent to the CPU_PORT and used by the
 // P4Runtime server (Stratum) to populate the PacketIn message metadata fields.
 // Here we use it to carry the original ingress port where the packet was
@@ -205,6 +215,7 @@ struct parsed_headers_t {
     srv6_list_t[SRV6_MAX_HOPS] srv6_list;
     tcp_t tcp;
     udp_t udp;
+    dns_t dns;
     icmp_t icmp;
     icmpv6_t icmpv6;
     ndp_t ndp;
@@ -224,8 +235,13 @@ struct local_metadata_t {
     bit<32> counter_two;
     bit<32> output_hash_three;
     bit<32> counter_three;
-    bit<32> output_hash_four;
-    bit<32> counter_four;
+    // bit<32> output_hash_four;
+    // bit<32> counter_four;
+
+    bit<32> current_time;
+    bit<32> last_reset_time;
+    bit<32> dns_hash_value;
+    bit<32> is_valid_query;
 }
 
 
@@ -289,12 +305,25 @@ parser ParserImpl (packet_in packet,
         transition accept;
     }
 
+    state parse_dns {
+        packet.extract(hdr.dns);
+        transition accept;
+    }
+
     state parse_udp {
         packet.extract(hdr.udp);
         local_metadata.l4_src_port = hdr.udp.src_port;
         local_metadata.l4_dst_port = hdr.udp.dst_port;
         transition accept;
+        // transition select(hdr.udp.dst_port){
+        //     53: parse_dns;
+        //     default: accept;
+        // }
     }
+
+    
+
+
 
     state parse_icmp {
         packet.extract(hdr.icmp);
@@ -370,15 +399,68 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                          inout local_metadata_t    local_metadata,
                          inout standard_metadata_t standard_metadata) {
     register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES) bloom_filter;
-    register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES2) bloom_filter2;
-
-   
+    // register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES2) bloom_filter2;
+    register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES) bloom_filter_dns;
+    register<bit<32>>(1) last_reset_register;
     // bit<1> direction; // 0表示内部向外界建立tcp，1表示外部流量进入
 
     // Drop action shared by many tables.
     action drop() {
         mark_to_drop(standard_metadata);
     }
+    action reset_dns_counters(bit<32> index){
+        bloom_filter_dns.write(index,0);
+    }
+    action record_query(){
+        hash(local_metadata.dns_hash_value,HashAlgorithm.crc32,(bit<32>)0,
+                                                            {hdr.ipv6.src_addr,
+                                                            hdr.ipv6.dst_addr,
+                                                            hdr.udp.src_port
+                                                            // hdr.dns.transaction_id
+                                                            },
+                                                            (bit<32>)BLOOM_FILTER_ENTRIES);
+        bloom_filter_dns.write(local_metadata.dns_hash_value,1);
+    }
+
+    action check_response(){
+        hash(local_metadata.dns_hash_value,HashAlgorithm.crc32,(bit<32>)0,{hdr.ipv6.dst_addr,
+                                                            hdr.ipv6.src_addr,
+                                                            hdr.udp.dst_port
+                                                            // hdr.dns.transaction_id
+                                                            },
+                                                            (bit<32>)BLOOM_FILTER_ENTRIES);
+        bloom_filter_dns.read(local_metadata.is_valid_query,local_metadata.dns_hash_value);
+        // if(local_metadata.is_valid_query == 0){
+
+        // }
+    }
+
+    table dns_query_table{
+        key = {
+            hdr.udp.dst_port:exact;
+        }
+        actions = {
+            record_query;
+            NoAction;
+        }
+        @name("dns_query_table_counter")
+        counters = direct_counter(CounterType.packets_and_bytes);
+    }
+
+    table dns_response_table{
+        key = {
+            hdr.udp.src_port : exact;
+        }
+        actions = {
+
+            check_response;
+            NoAction;
+        }
+        @name("dns_response_table_counter")
+        counters = direct_counter(CounterType.packets_and_bytes);
+    }
+
+
 
     // action set_direction(bit<1> dir) {
     //     direction = dir;
@@ -760,7 +842,8 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
     }
 
     apply {
-
+        
+        
         if (hdr.cpu_out.isValid()) {
             // *** TODO EXERCISE 4
             // Implement logic such that if this is a packet-out from the
@@ -825,7 +908,33 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                         }
                     }
                  //}
-            }
+                }
+                if(hdr.udp.isValid()){
+                    if(hdr.udp.dst_port == 53){
+                        record_query();
+                        last_reset_register.read(local_metadata.last_reset_time,0);
+                        local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                        
+                    }else if(hdr.udp.src_port == 53){
+                        check_response();
+                        last_reset_register.read(local_metadata.last_reset_time,0);
+                        local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                        
+                        if(local_metadata.is_valid_query  == 0){
+                            drop();
+                            return;
+                        }
+                        drop();
+                        return;
+                    }
+                    if (local_metadata.current_time - local_metadata.last_reset_time > TIME_WINDOW) {
+                        reset_dns_counters(local_metadata.dns_hash_value);
+                        last_reset_register.write(0, local_metadata.current_time);
+                    }
+                    drop();
+                    return;
+                }
+
                 if(hdr.ipv6.hop_limit == 0){ drop();}
             }
 
