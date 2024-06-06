@@ -215,7 +215,6 @@ struct parsed_headers_t {
     srv6_list_t[SRV6_MAX_HOPS] srv6_list;
     tcp_t tcp;
     udp_t udp;
-    dns_t dns;
     icmp_t icmp;
     icmpv6_t icmpv6;
     ndp_t ndp;
@@ -305,10 +304,10 @@ parser ParserImpl (packet_in packet,
         transition accept;
     }
 
-    state parse_dns {
-        packet.extract(hdr.dns);
-        transition accept;
-    }
+    // state parse_dns {
+    //     packet.extract(hdr.dns);
+    //     transition accept;
+    // }
 
     state parse_udp {
         packet.extract(hdr.udp);
@@ -401,7 +400,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
     register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES) bloom_filter;
     // register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES2) bloom_filter2;
     register<bit<BLOOM_FILTER_BIT_WIDTH>>(BLOOM_FILTER_ENTRIES) bloom_filter_dns;
-    register<bit<32>>(1) last_reset_register;
+    // register<bit<32>>(1) last_reset_register;
     // bit<1> direction; // 0表示内部向外界建立tcp，1表示外部流量进入
 
     // Drop action shared by many tables.
@@ -430,9 +429,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                                                             },
                                                             (bit<32>)BLOOM_FILTER_ENTRIES);
         bloom_filter_dns.read(local_metadata.is_valid_query,local_metadata.dns_hash_value);
-        // if(local_metadata.is_valid_query == 0){
-
-        // }
+        bloom_filter_dns.write(local_metadata.dns_hash_value,0);
     }
 
     table dns_query_table{
@@ -876,11 +873,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             // Insert logic to match the My Station table and upon hit, the
             // routing table. You should also add a conditional to drop the
             // packet if the hop_limit reaches 0.
-            // if(ddos_drop_table.apply().hit){
-            //     mark_to_drop(standard_metadata);
-            //     // dropped = true;
-            //     exit;
-            // }
+
             if(hdr.ipv6.isValid() && my_station_table.apply().hit ){
             
                 if(local_sid_table.apply().hit){
@@ -912,27 +905,23 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                 if(hdr.udp.isValid()){
                     if(hdr.udp.dst_port == 53){
                         record_query();
-                        last_reset_register.read(local_metadata.last_reset_time,0);
-                        local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                        // last_reset_register.read(local_metadata.last_reset_time,0);
+                        // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
                         
                     }else if(hdr.udp.src_port == 53){
                         check_response();
-                        last_reset_register.read(local_metadata.last_reset_time,0);
-                        local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                        // last_reset_register.read(local_metadata.last_reset_time,0);
+                        // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
                         
                         if(local_metadata.is_valid_query  == 0){
                             drop();
                             return;
                         }
-                        drop();
-                        return;
                     }
-                    if (local_metadata.current_time - local_metadata.last_reset_time > TIME_WINDOW) {
-                        reset_dns_counters(local_metadata.dns_hash_value);
-                        last_reset_register.write(0, local_metadata.current_time);
-                    }
-                    drop();
-                    return;
+                    // if (local_metadata.current_time - local_metadata.last_reset_time > TIME_WINDOW) {
+                    //     reset_dns_counters(local_metadata.dns_hash_value);
+                    //     last_reset_register.write(0, local_metadata.current_time);
+                    // }
                 }
 
                 if(hdr.ipv6.hop_limit == 0){ drop();}
