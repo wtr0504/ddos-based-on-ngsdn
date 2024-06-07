@@ -241,6 +241,7 @@ struct local_metadata_t {
     bit<32> last_reset_time;
     bit<32> dns_hash_value;
     bit<32> is_valid_query;
+    bit<32> tmp_valid_query;
 }
 
 
@@ -418,7 +419,9 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                                                             // hdr.dns.transaction_id
                                                             },
                                                             (bit<32>)BLOOM_FILTER_ENTRIES);
-        bloom_filter_dns.write(local_metadata.dns_hash_value,1);
+        bloom_filter_dns.read(local_metadata.is_valid_query,local_metadata.dns_hash_value);
+        local_metadata.is_valid_query = local_metadata.is_valid_query + 1;
+        bloom_filter_dns.write(local_metadata.dns_hash_value,local_metadata.is_valid_query);
     }
 
     action check_response(){
@@ -429,7 +432,15 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                                                             },
                                                             (bit<32>)BLOOM_FILTER_ENTRIES);
         bloom_filter_dns.read(local_metadata.is_valid_query,local_metadata.dns_hash_value);
-        bloom_filter_dns.write(local_metadata.dns_hash_value,0);
+        if(local_metadata.is_valid_query > 0){
+            local_metadata.tmp_valid_query = local_metadata.is_valid_query;
+            local_metadata.is_valid_query = local_metadata.is_valid_query - 1;
+        }else{
+            local_metadata.tmp_valid_query = local_metadata.is_valid_query;
+        }
+        bloom_filter_dns.write(local_metadata.dns_hash_value,local_metadata.is_valid_query);
+
+        
     }
 
     table dns_query_table{
@@ -449,7 +460,6 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
             hdr.udp.src_port : exact;
         }
         actions = {
-
             check_response;
             NoAction;
         }
@@ -457,7 +467,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
         counters = direct_counter(CounterType.packets_and_bytes);
     }
 
-
+    action 
 
     // action set_direction(bit<1> dir) {
     //     direction = dir;
@@ -913,7 +923,7 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                         // last_reset_register.read(local_metadata.last_reset_time,0);
                         // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
                         
-                        if(local_metadata.is_valid_query  == 0){
+                        if(local_metadata.tmp_valid_query  == 0){
                             drop();
                             return;
                         }
@@ -980,7 +990,7 @@ control EgressPipeImpl (inout parsed_headers_t hdr,
             // 1. Set cpu_in header as valid
             // 2. Set the cpu_in.ingress_port field to the original packet's
             //    ingress port (standard_metadata.ingress_port).
-	    hdr.cpu_in.setValid();
+	        hdr.cpu_in.setValid();
             hdr.cpu_in.ingress_port = standard_metadata.ingress_port;
             exit;
 	}
