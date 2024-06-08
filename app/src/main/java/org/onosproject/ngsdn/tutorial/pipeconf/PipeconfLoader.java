@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 import static org.onosproject.net.pi.model.PiPipeconf.ExtensionType.BMV2_JSON;
 import static org.onosproject.net.pi.model.PiPipeconf.ExtensionType.P4_INFO_TEXT;
-import static org.onosproject.ngsdn.tutorial.AppConstants.PIPECONF_ID;
+import static org.onosproject.ngsdn.tutorial.AppConstants.*;
 
 /**
  * Component that builds and register the pipeconf at app activation.
@@ -52,6 +52,8 @@ public final class PipeconfLoader {
 
     private static final String P4INFO_PATH = "/p4info.txt";
     private static final String BMV2_JSON_PATH = "/bmv2.json";
+    private static final String P4INFO_LEAF_PATH = "/p4info-leaf.txt";
+    private static final String BMV2_JSON_LEAF_PATH = "/bmv2-leaf.json";
 
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
@@ -68,9 +70,15 @@ public final class PipeconfLoader {
             // pipeconf during the tutorial.
             pipeconfService.unregister(PIPECONF_ID);
         }
+        if (pipeconfService.getPipeconf(PIPECONF_LEAF_ID).isPresent()) {
+            // Remove first if already registered, to support reloading of the
+            // pipeconf during the tutorial.
+            pipeconfService.unregister(PIPECONF_LEAF_ID);
+        }
         removePipeconfDrivers();
         try {
             pipeconfService.register(buildPipeconf());
+            pipeconfService.register(buildLeafPipeConf());
         } catch (P4InfoParserException e) {
             log.error("Unable to register " + PIPECONF_ID, e);
         }
@@ -96,6 +104,22 @@ public final class PipeconfLoader {
                 .addExtension(BMV2_JSON, bmv2JsonUrlUrl)
                 .build();
     }
+    
+    private PiPipeconf buildLeafPipeConf() throws P4InfoParserException{
+        final URL p4LeafINfoUrl = PipeconfLoader.class.getResource(P4INFO_LEAF_PATH);
+        final URL bmv2LeafJsonUrlUrl = PipeconfLoader.class.getResource(BMV2_JSON_LEAF_PATH);
+        final PiPipelineModel pipelineLeafModel = P4InfoParser.parse(p4LeafINfoUrl);
+
+        return DefaultPiPipeconf.builder()
+                .withId(PIPECONF_LEAF_ID)
+                .withPipelineModel(pipelineLeafModel)
+                .addBehaviour(PiPipelineInterpreter.class, InterpreterImpl.class)
+                .addBehaviour(Pipeliner.class, PipelinerImpl.class)
+                .addExtension(P4_INFO_TEXT, p4LeafINfoUrl)
+                .addExtension(BMV2_JSON, bmv2LeafJsonUrlUrl)
+                .build();
+    }
+
 
     private void removePipeconfDrivers() {
         List<DriverProvider> driverProvidersToRemove = driverAdminService

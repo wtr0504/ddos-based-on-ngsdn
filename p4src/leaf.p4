@@ -40,7 +40,7 @@
 #define SYN_THRESHOLD 20
 #define BLOOM_FILTER_ENTRIES 4096
 #define BLOOM_FILTER_BIT_WIDTH 32
-#define PACKET_THRESHOLD 10
+#define PACKET_THRESHOLD 2
 #define BLOOM_FILTER_ENTRIES2 8192
 #define TIME_WINDOW 3600000 * 1000
 
@@ -895,44 +895,44 @@ control IngressPipeImpl (inout parsed_headers_t    hdr,
                 }
                 ipv6_routing_table.apply();
 
-                // if (hdr.tcp.isValid()){
-                //  //@atomic{
-                //     // first_drop();
-                //     // if(local_metadata.counter_three >= SYN_THRESHOLD){
-                //     //     drop();
-                //     //     return;
-                //     // }
-                //     update_bloom_filter();
-                //     //only if IPV4 the rule is applied. Therefore other packets will not be forwarded.
-                //     if(local_metadata.counter_one > local_metadata.counter_two){
-                //         if ( (local_metadata.counter_one - local_metadata.counter_two > PACKET_THRESHOLD)){
-                //             drop();
-                //             return;
-                //         }
-                //     }
-                //  //}
-                // }
-                // if(hdr.udp.isValid()){
-                //     if(hdr.udp.dst_port == 53){
-                //         record_query();
-                //         // last_reset_register.read(local_metadata.last_reset_time,0);
-                //         // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                if (hdr.tcp.isValid()){
+                 //@atomic{
+                    // first_drop();
+                    // if(local_metadata.counter_three >= SYN_THRESHOLD){
+                    //     drop();
+                    //     return;
+                    // }
+                    update_bloom_filter();
+                    //only if IPV4 the rule is applied. Therefore other packets will not be forwarded.
+                    if(local_metadata.counter_one > local_metadata.counter_two){
+                        if ( (local_metadata.counter_one - local_metadata.counter_two > PACKET_THRESHOLD)){
+                            drop();
+                            return;
+                        }
+                    }
+                 //}
+                }
+                if(hdr.udp.isValid()){
+                    if(hdr.udp.dst_port == 53){
+                        record_query();
+                        // last_reset_register.read(local_metadata.last_reset_time,0);
+                        // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
                         
-                //     }else if(hdr.udp.src_port == 53){
-                //         check_response();
-                //         // last_reset_register.read(local_metadata.last_reset_time,0);
-                //         // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
+                    }else if(hdr.udp.src_port == 53){
+                        check_response();
+                        // last_reset_register.read(local_metadata.last_reset_time,0);
+                        // local_metadata.current_time = (bit<32>)standard_metadata.ingress_global_timestamp ;
                         
-                //         if(local_metadata.tmp_valid_query  == 0){
-                //             drop();
-                //             return;
-                //         }
-                //     }
-                //     // if (local_metadata.current_time - local_metadata.last_reset_time > TIME_WINDOW) {
-                //     //     reset_dns_counters(local_metadata.dns_hash_value);
-                //     //     last_reset_register.write(0, local_metadata.current_time);
-                //     // }
-                // }
+                        if(local_metadata.tmp_valid_query  == 0){
+                            drop();
+                            return;
+                        }
+                    }
+                    // if (local_metadata.current_time - local_metadata.last_reset_time > TIME_WINDOW) {
+                    //     reset_dns_counters(local_metadata.dns_hash_value);
+                    //     last_reset_register.write(0, local_metadata.current_time);
+                    // }
+                }
 
                 if(hdr.ipv6.hop_limit == 0){ drop();}
             }

@@ -1,0 +1,582 @@
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 33605373
+    name: "IngressPipeImpl.l2_exact_table"
+    alias: "l2_exact_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ethernet.dst_addr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16812802
+  }
+  action_refs {
+    id: 16796182
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  const_default_action_id: 16796182
+  direct_resource_ids: 318813612
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33573501
+    name: "IngressPipeImpl.l2_ternary_table"
+    alias: "l2_ternary_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ethernet.dst_addr"
+    bitwidth: 48
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 16841371
+  }
+  action_refs {
+    id: 16796182
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  const_default_action_id: 16796182
+  direct_resource_ids: 318768597
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33590087
+    name: "IngressPipeImpl.ndp_table"
+    alias: "ndp_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ndp.target_ipv6_addr"
+    bitwidth: 128
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16806517
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  const_default_action_id: 16800567
+  direct_resource_ids: 318767233
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33589970
+    name: "IngressPipeImpl.my_station_table"
+    alias: "my_station_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ethernet.dst_addr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16800567
+  }
+  direct_resource_ids: 318806143
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33615374
+    name: "IngressPipeImpl.ipv6_routing_table"
+    alias: "ipv6_routing_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv6.dst_addr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16821500
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  implementation_id: 285229850
+  direct_resource_ids: 318827568
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33607484
+    name: "IngressPipeImpl.local_sid_table"
+    alias: "local_sid_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv6.dst_addr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16839603
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  direct_resource_ids: 318794460
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33559858
+    name: "IngressPipeImpl.srv6_transit"
+    alias: "srv6_transit"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv6.dst_addr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16788427
+  }
+  action_refs {
+    id: 16813960
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  direct_resource_ids: 318826973
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33557865
+    name: "IngressPipeImpl.acl_table"
+    alias: "acl_table"
+  }
+  match_fields {
+    id: 1
+    name: "standard_metadata.ingress_port"
+    bitwidth: 9
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 2
+    name: "hdr.ethernet.dst_addr"
+    bitwidth: 48
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 3
+    name: "hdr.ethernet.src_addr"
+    bitwidth: 48
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 4
+    name: "hdr.ethernet.ether_type"
+    bitwidth: 16
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 5
+    name: "local_metadata.ip_proto"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 6
+    name: "local_metadata.icmp_type"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 7
+    name: "local_metadata.l4_src_port"
+    bitwidth: 16
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 8
+    name: "local_metadata.l4_dst_port"
+    bitwidth: 16
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 16833331
+  }
+  action_refs {
+    id: 16782152
+  }
+  action_refs {
+    id: 16796182
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  direct_resource_ids: 318773822
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33574690
+    name: "IngressPipeImpl.ddos_drop_table"
+    alias: "ddos_drop_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv6.src_addr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16800567
+  }
+  direct_resource_ids: 318816878
+  size: 1024
+}
+actions {
+  preamble {
+    id: 16800567
+    name: "NoAction"
+    alias: "NoAction"
+  }
+}
+actions {
+  preamble {
+    id: 16796182
+    name: "IngressPipeImpl.drop"
+    alias: "drop"
+  }
+}
+actions {
+  preamble {
+    id: 16814551
+    name: "IngressPipeImpl.record_query"
+    alias: "record_query"
+  }
+}
+actions {
+  preamble {
+    id: 16786314
+    name: "IngressPipeImpl.check_response"
+    alias: "check_response"
+  }
+}
+actions {
+  preamble {
+    id: 16791192
+    name: "IngressPipeImpl.update_bloom_filter"
+    alias: "update_bloom_filter"
+  }
+}
+actions {
+  preamble {
+    id: 16812802
+    name: "IngressPipeImpl.set_egress_port"
+    alias: "set_egress_port"
+  }
+  params {
+    id: 1
+    name: "port_num"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 16841371
+    name: "IngressPipeImpl.set_multicast_group"
+    alias: "set_multicast_group"
+  }
+  params {
+    id: 1
+    name: "gid"
+    bitwidth: 16
+  }
+}
+actions {
+  preamble {
+    id: 16806517
+    name: "IngressPipeImpl.ndp_ns_to_na"
+    alias: "ndp_ns_to_na"
+  }
+  params {
+    id: 1
+    name: "target_mac"
+    bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16821500
+    name: "IngressPipeImpl.set_next_ipv6_hop"
+    alias: "set_next_ipv6_hop"
+  }
+  params {
+    id: 1
+    name: "mac"
+    bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16839603
+    name: "IngressPipeImpl.next_sid"
+    alias: "next_sid"
+  }
+}
+actions {
+  preamble {
+    id: 16788427
+    name: "IngressPipeImpl.srv6_t_insert_2"
+    alias: "srv6_t_insert_2"
+  }
+  params {
+    id: 1
+    name: "s1"
+    bitwidth: 128
+  }
+  params {
+    id: 2
+    name: "s2"
+    bitwidth: 128
+  }
+}
+actions {
+  preamble {
+    id: 16813960
+    name: "IngressPipeImpl.srv6_t_insert_3"
+    alias: "srv6_t_insert_3"
+  }
+  params {
+    id: 1
+    name: "s1"
+    bitwidth: 128
+  }
+  params {
+    id: 2
+    name: "s2"
+    bitwidth: 128
+  }
+  params {
+    id: 3
+    name: "s3"
+    bitwidth: 128
+  }
+}
+actions {
+  preamble {
+    id: 16800825
+    name: "IngressPipeImpl.srv6_pop"
+    alias: "srv6_pop"
+  }
+}
+actions {
+  preamble {
+    id: 16833331
+    name: "IngressPipeImpl.send_to_cpu"
+    alias: "send_to_cpu"
+  }
+}
+actions {
+  preamble {
+    id: 16782152
+    name: "IngressPipeImpl.clone_to_cpu"
+    alias: "clone_to_cpu"
+  }
+}
+action_profiles {
+  preamble {
+    id: 285229850
+    name: "IngressPipeImpl.ecmp_selector"
+    alias: "ecmp_selector"
+  }
+  table_ids: 33615374
+  with_selector: true
+  size: 1024
+}
+direct_counters {
+  preamble {
+    id: 318813612
+    name: "l2_exact_table_counter"
+    alias: "l2_exact_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33605373
+}
+direct_counters {
+  preamble {
+    id: 318768597
+    name: "l2_ternary_table_counter"
+    alias: "l2_ternary_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33573501
+}
+direct_counters {
+  preamble {
+    id: 318767233
+    name: "ndp_reply_table_counter"
+    alias: "ndp_reply_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33590087
+}
+direct_counters {
+  preamble {
+    id: 318806143
+    name: "my_station_table_counter"
+    alias: "my_station_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33589970
+}
+direct_counters {
+  preamble {
+    id: 318827568
+    name: "routing_v6_table_counter"
+    alias: "routing_v6_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33615374
+}
+direct_counters {
+  preamble {
+    id: 318794460
+    name: "local_sid_table_counter"
+    alias: "local_sid_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33607484
+}
+direct_counters {
+  preamble {
+    id: 318826973
+    name: "srv6_transit_table_counter"
+    alias: "srv6_transit_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33559858
+}
+direct_counters {
+  preamble {
+    id: 318773822
+    name: "acl_table_counter"
+    alias: "acl_table_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33557865
+}
+direct_counters {
+  preamble {
+    id: 318816878
+    name: "ddos_drop_couter"
+    alias: "ddos_drop_couter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33574690
+}
+controller_packet_metadata {
+  preamble {
+    id: 67132047
+    name: "packet_in"
+    alias: "packet_in"
+    annotations: "@controller_header(\"packet_in\")"
+  }
+  metadata {
+    id: 1
+    name: "ingress_port"
+    bitwidth: 9
+  }
+  metadata {
+    id: 2
+    name: "_pad"
+    bitwidth: 7
+  }
+}
+controller_packet_metadata {
+  preamble {
+    id: 67111875
+    name: "packet_out"
+    alias: "packet_out"
+    annotations: "@controller_header(\"packet_out\")"
+  }
+  metadata {
+    id: 1
+    name: "egress_port"
+    bitwidth: 9
+  }
+  metadata {
+    id: 2
+    name: "_pad"
+    bitwidth: 7
+  }
+}
+registers {
+  preamble {
+    id: 369153788
+    name: "IngressPipeImpl.bloom_filter"
+    alias: "bloom_filter"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 4096
+}
+registers {
+  preamble {
+    id: 369111114
+    name: "IngressPipeImpl.bloom_filter_dns"
+    alias: "bloom_filter_dns"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 4096
+}
+type_info {
+}

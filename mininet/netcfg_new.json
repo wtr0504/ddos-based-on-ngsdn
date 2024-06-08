@@ -64,7 +64,7 @@
             "basic":{
                 "managementAddress":"grpc://mininet:50002?device_id=1",
                 "driver": "stratum-bmv2",
-                "pipeconf": "org.onosproject.ngsdn-tutorial",
+                "pipeconf": "org.onosproject.ngsdn-tutorial-leaf",
                 "locType": "grid",
                 "gridX": 300,
                 "gridY": 150
@@ -79,7 +79,7 @@
             "basic":{
                 "managementAddress":"grpc://mininet:50003?device_id=1",
                 "driver": "stratum-bmv2",
-                "pipeconf": "org.onosproject.ngsdn-tutorial",
+                "pipeconf": "org.onosproject.ngsdn-tutorial-leaf",
                 "locType": "grid",
                 "gridX": 400,
                 "gridY": 150
@@ -94,7 +94,7 @@
             "basic":{
                 "managementAddress":"grpc://mininet:50004?device_id=1",
                 "driver": "stratum-bmv2",
-                "pipeconf": "org.onosproject.ngsdn-tutorial",
+                "pipeconf": "org.onosproject.ngsdn-tutorial-leaf",
                 "locType": "grid",
                 "gridX": 500,
                 "gridY": 150

@@ -126,6 +126,8 @@ clean:
 	-$(NGSDN_TUTORIAL_SUDO) rm -rf app/target
 	-$(NGSDN_TUTORIAL_SUDO) rm -rf app/src/main/resources/bmv2.json
 	-$(NGSDN_TUTORIAL_SUDO) rm -rf app/src/main/resources/p4info.txt
+	-$(NGSDN_TUTORIAL_SUDO) rm -rf app/src/main/resources/p4info-leaf.txt
+	-$(NGSDN_TUTORIAL_SUDO) rm -rf app/src/main/resources/bmv2-leaf.json
 
 p4-build: p4src/main.p4
 	$(info *** Building P4 program...)
@@ -134,6 +136,10 @@ p4-build: p4src/main.p4
 		p4c-bm2-ss --arch v1model -o p4src/build/bmv2.json \
 		--p4runtime-files p4src/build/p4info.txt --Wdisable=unsupported \
 		p4src/main.p4
+	docker run --rm -v ${curr_dir}:/workdir -w /workdir ${P4C_IMG} \
+		p4c-bm2-ss --arch v1model -o p4src/build/bmv2-leaf.json \
+		--p4runtime-files p4src/build/p4info-leaf.txt --Wdisable=unsupported \
+		p4src/leaf.p4
 	@echo "*** P4 program compiled successfully! Output files are in p4src/build"
 
 p4-test:
@@ -144,7 +150,8 @@ _copy_p4c_out:
 	@mkdir -p app/src/main/resources
 	cp -f p4src/build/p4info.txt app/src/main/resources/
 	cp -f p4src/build/bmv2.json app/src/main/resources/
-
+	cp -f p4src/build/bmv2-leaf.json app/src/main/resources/
+	cp -f p4src/build/p4info-leaf.txt app/src/main/resources/
 _mvn_package:
 	$(info *** Building ONOS app...)
 	@mkdir -p app/target

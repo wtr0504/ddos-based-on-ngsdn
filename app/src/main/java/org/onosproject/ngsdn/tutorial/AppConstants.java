@@ -22,6 +22,7 @@ public class AppConstants {
 
     public static final String APP_NAME = "org.onosproject.ngsdn-tutorial";
     public static final PiPipeconfId PIPECONF_ID = new PiPipeconfId("org.onosproject.ngsdn-tutorial");
+    public static final PiPipeconfId PIPECONF_LEAF_ID = new PiPipeconfId("org.onosproject.ngsdn-tutorial-leaf");
 
     public static final int DEFAULT_FLOW_RULE_PRIORITY = 10;
     public static final int INITIAL_SETUP_DELAY = 2; // Seconds.
